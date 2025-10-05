@@ -1,64 +1,38 @@
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import rateLimit from "express-rate-limit";
-import compression from "compression";
-import morgan from "morgan";
-import { errorHandler } from "./middlewares/errorHandler.js";
-import apiRoutes from "./routes/index.js";
+// server.js
+import "dotenv/config";
+import http from "http";
+import mongoose from "mongoose";
+import app from "./app.js";
 
-const app = express();
+const PORT = process.env.PORT || 5000;
+const MONGO_URI =
+  process.env.MONGODB_URI || "mongodb://localhost:27017/rental_db";
+const ENV = process.env.NODE_ENV || "development";
 
-// Security middleware
-app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: true,
+const server = http.createServer(app);
+
+mongoose.set("strictQuery", true);
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
   })
-);
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: {
-    status: "error",
-    message: "Too many requests from this IP, please try again later.",
-  },
-});
-app.use("/api/", limiter);
-
-// Auth specific rate limiting (stricter)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5, // limit auth attempts
-  skipSuccessfulRequests: true,
-});
-app.use("/api/auth", authLimiter);
-
-// General middleware
-app.use(compression());
-app.use(morgan("combined"));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// Disable Express fingerprinting
-app.disable("x-powered-by");
-
-// API routes
-app.use("/api", apiRoutes);
-
-// Root endpoint
-app.get("/", (req, res) => {
-  res.json({
-    message: "Wypożyczalnia Sprzętu API",
-    version: "1.0.0",
-    docs: "/api/health",
+  .then(() => {
+    console.log(`MongoDB connected: ${MONGO_URI}`);
+    server.listen(PORT, () => {
+      console.log(`Server running in ${ENV} mode on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
   });
+
+// Global error handlers
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
-
-// Global error handler (must be last)
-app.use(errorHandler);
-
-export default app;
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+  process.exit(1);
+});

@@ -26,8 +26,8 @@ router.get("/health", (req, res) => {
   });
 });
 
-// 404 handler dla API routes
-router.use("*", (req, res) => {
+// 404 handler dla API routes - POPRAWIONA SKŁADNIA dla Express v5
+router.use("/{*catchall}", (req, res) => {
   res.status(404).json({
     status: "error",
     message: `Route ${req.originalUrl} not found`,
