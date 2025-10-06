@@ -1,14 +1,5 @@
 import mongoose from "mongoose";
 
-const AspectsSchema = new mongoose.Schema(
-  {
-    quality: { type: Number, min: 1, max: 5 },
-    usability: { type: Number, min: 1, max: 5 },
-    value: { type: Number, min: 1, max: 5 },
-  },
-  { _id: false }
-);
-
 const ReviewSchema = new mongoose.Schema(
   {
     user: {
@@ -33,7 +24,6 @@ const ReviewSchema = new mongoose.Schema(
     rating: { type: Number, required: true, min: 1, max: 5 },
     title: { type: String, trim: true, maxlength: 100 },
     comment: { type: String, trim: true, maxlength: 1000 },
-    aspects: AspectsSchema,
 
     isVerified: { type: Boolean, default: true },
     helpfulVotes: { type: Number, default: 0, min: 0 },
@@ -42,7 +32,7 @@ const ReviewSchema = new mongoose.Schema(
 );
 
 // Jeden użytkownik – jedna recenzja na sprzęt
-ReviewSchema.index({ user: 1, equipment: 1 }, { unique: true });
+// ReviewSchema.index({ user: 1, equipment: 1 }, { unique: true });
 // Wyświetlanie po ocenie
 ReviewSchema.index({ equipment: 1, rating: -1 });
 

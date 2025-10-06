@@ -58,9 +58,6 @@ export const validateEquipment = [
     .isLength({ min: 1, max: 200 })
     .withMessage("Equipment name is required (max 200 chars)"),
   body("category").isMongoId().withMessage("Valid category ID is required"),
-  body("pricing.dailyRate")
-    .isFloat({ min: 0 })
-    .withMessage("Daily rate must be a positive number"),
   body("availability.quantity")
     .optional()
     .isInt({ min: 0 })
@@ -79,12 +76,7 @@ export const validateReservation = [
     .isISO8601()
     .toDate()
     .withMessage("Valid end date is required"),
-  body("pricing.dailyRate")
-    .isFloat({ min: 0 })
-    .withMessage("Daily rate must be positive"),
-  body("pricing.totalAmount")
-    .isFloat({ min: 0 })
-    .withMessage("Total amount must be positive"),
+
   handleValidationErrors,
 ];
 

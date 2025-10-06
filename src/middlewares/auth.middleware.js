@@ -12,16 +12,14 @@ export const authenticate = async (req, res, next) => {
       return fail(res, 401, "Authentication required");
     }
 
-    const token = authHeader.split(" ");
+    const token = authHeader.split(" ")[1]; // <- poprawka: wybieramy token, a nie tablicę
     const payload = jwt.verify(token, JWT_SECRET);
 
-    // Pobieramy aktualny stan użytkownika z bazy
     const user = await User.findById(payload.sub).lean();
     if (!user || !user.isActive) {
       return fail(res, 401, "User not found or inactive");
     }
 
-    // Dołączamy informacje o użytkowniku do request
     req.user = user;
     req.userId = user._id.toString();
     req.userRole = user.role;
@@ -41,6 +39,8 @@ export const authenticate = async (req, res, next) => {
 // Middleware RBAC - sprawdza czy użytkownik ma wymaganą rolę
 export const authorize = (allowedRoles = []) => {
   return (req, res, next) => {
+    console.log(req.user);
+
     if (!req.user) {
       return fail(res, 401, "Authentication required");
     }
@@ -62,6 +62,8 @@ export const authorize = (allowedRoles = []) => {
 // Middleware sprawdzający czy użytkownik może edytować własne zasoby
 export const authorizeOwnerOrAdmin = (userIdField = "user") => {
   return async (req, res, next) => {
+    console.log(req.user);
+
     if (!req.user) {
       return fail(res, 401, "Authentication required");
     }

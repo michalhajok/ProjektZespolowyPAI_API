@@ -1,126 +1,156 @@
 import { Router } from "express";
 import * as reservationController from "../controllers/reservation.controller.js";
-import {
-  authenticate,
-  authorize,
-  checkResourceOwnership,
-} from "../middlewares/auth.middleware.js";
+import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import {
   validateReservation,
   validateObjectId,
   validatePagination,
 } from "../middlewares/validation.middleware.js";
-import { body } from "express-validator";
-import { handleValidationErrors } from "../middlewares/validation.middleware.js";
-import Reservation from "../models/Reservation.js";
 
 const router = Router();
 
-const validateStatusUpdate = [
-  body("status")
-    .isIn([
-      "pending",
-      "confirmed",
-      "active",
-      "completed",
-      "cancelled",
-      "overdue",
-    ])
-    .withMessage("Invalid status"),
-  body("reason")
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage("Reason max 500 characters"),
-  handleValidationErrors,
-];
+/**
+ * @swagger
+ * tags:
+ *   name: Reservations
+ *   description: System rezerwacji sprzętu
+ */
 
 /**
- * @route   GET /api/reservations
- * @desc    Get reservations (filtered by user role)
- * @access  Private
+ * @swagger
+ * /api/reservations:
+ *   get:
+ *     tags: [Reservations]
+ *     summary: Pobierz rezerwacje
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/PaginatedResponse'
  */
 router.get(
   "/",
   authenticate,
   validatePagination,
-  (req, res, next) => {
-    // Zwykli użytkownicy widzą tylko swoje rezerwacje
-    if (req.userRole !== "admin") {
-      req.query.user = req.userId;
-    }
-    next();
-  },
   reservationController.getReservations
 );
 
 /**
- * @route   GET /api/reservations/:id
- * @desc    Get reservation by ID (owner or admin)
- * @access  Private
+ * @swagger
+ * /api/reservations/{id}:
+ *   get:
+ *     tags: [Reservations]
+ *     summary: Pobierz rezerwację po ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
 router.get(
   "/:id",
   authenticate,
   validateObjectId(),
-  checkResourceOwnership(Reservation),
   reservationController.getReservationById
 );
 
 /**
- * @route   POST /api/reservations
- * @desc    Create reservation
- * @access  Private
+ * @swagger
+ * /api/reservations:
+ *   post:
+ *     tags: [Reservations]
+ *     summary: Utwórz rezerwację
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       type: object
+ *       properties:
+ *         equipment:
+ *           type: string
+ *         dates:
+ *           $ref: '#/components/schemas/Reservation/properties/dates'
+ *     responses:
+ *       201:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
 router.post(
   "/",
   authenticate,
   validateReservation,
-  (req, res, next) => {
-    // Automatycznie przypisz zalogowanego użytkownika
-    req.body.user = req.userId;
-    next();
-  },
   reservationController.createReservation
 );
 
 /**
- * @route   PUT /api/reservations/:id
- * @desc    Update reservation (owner or admin)
- * @access  Private
+ * @swagger
+ * /api/reservations/{id}:
+ *   patch:
+ *     tags: [Reservations]
+ *     summary: Zmień status rezerwacji
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       type: object
+ *       required:
+ *         - status
+ *       properties:
+ *         status:
+ *           type: string
+ *         reason:
+ *           type: string
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
-router.put(
+router.patch(
   "/:id",
   authenticate,
   validateObjectId(),
-  checkResourceOwnership(Reservation),
-  reservationController.updateReservation
-);
-
-/**
- * @route   PATCH /api/reservations/:id/status
- * @desc    Update reservation status (admin only)
- * @access  Private (Admin)
- */
-router.patch(
-  "/:id/status",
-  authenticate,
-  authorize(["admin"]),
-  validateObjectId(),
-  validateStatusUpdate,
   reservationController.updateReservationStatus
 );
 
 /**
- * @route   DELETE /api/reservations/:id
- * @desc    Delete reservation (owner or admin)
- * @access  Private
+ * @swagger
+ * /api/reservations/{id}:
+ *   delete:
+ *     tags: [Reservations]
+ *     summary: Usuń rezerwację
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Rezerwacja usunięta
  */
 router.delete(
   "/:id",
   authenticate,
   validateObjectId(),
-  checkResourceOwnership(Reservation),
   reservationController.deleteReservation
 );
 

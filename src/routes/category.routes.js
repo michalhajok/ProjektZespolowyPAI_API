@@ -1,78 +1,113 @@
 import { Router } from "express";
 import * as categoryController from "../controllers/category.controller.js";
-import {
-  authenticate,
-  authorize,
-  optionalAuth,
-} from "../middlewares/auth.middleware.js";
+import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { validateObjectId } from "../middlewares/validation.middleware.js";
-import { body } from "express-validator";
-import { handleValidationErrors } from "../middlewares/validation.middleware.js";
 
 const router = Router();
 
-const validateCategory = [
-  body("name")
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Category name is required (max 100 chars)"),
-  body("description")
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage("Description max 500 characters"),
-  body("parentCategory")
-    .optional()
-    .isMongoId()
-    .withMessage("Valid parent category ID required"),
-  handleValidationErrors,
-];
-
 /**
- * @route   GET /api/categories
- * @desc    Get all categories
- * @access  Public
+ * @swagger
+ * tags:
+ *   name: Categories
+ *   description: Zarządzanie kategoriami sprzętu
  */
-router.get("/", optionalAuth, categoryController.getCategories);
 
 /**
- * @route   GET /api/categories/:id
- * @desc    Get category by ID
- * @access  Public
+ * @swagger
+ * /api/categories:
+ *   get:
+ *     tags: [Categories]
+ *     summary: Pobierz wszystkie kategorie
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/PaginatedResponse'
+ */
+router.get("/", categoryController.getCategories);
+
+/**
+ * @swagger
+ * /api/categories/{id}:
+ *   get:
+ *     tags: [Categories]
+ *     summary: Pobierz kategorię po ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
 router.get("/:id", validateObjectId(), categoryController.getCategoryById);
 
 /**
- * @route   POST /api/categories
- * @desc    Create category (admin only)
- * @access  Private (Admin)
+ * @swagger
+ * /api/categories:
+ *   post:
+ *     tags: [Categories]
+ *     summary: Utwórz kategorię (admin)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       $ref: '#/components/schemas/Category'
+ *     responses:
+ *       201:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
 router.post(
   "/",
   authenticate,
   authorize(["admin"]),
-  validateCategory,
   categoryController.createCategory
 );
 
 /**
- * @route   PUT /api/categories/:id
- * @desc    Update category (admin only)
- * @access  Private (Admin)
+ * @swagger
+ * /api/categories/{id}:
+ *   put:
+ *     tags: [Categories]
+ *     summary: Edytuj kategorię (admin)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       $ref: '#/components/schemas/Category'
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
 router.put(
   "/:id",
   authenticate,
   authorize(["admin"]),
   validateObjectId(),
-  validateCategory,
   categoryController.updateCategory
 );
 
 /**
- * @route   DELETE /api/categories/:id
- * @desc    Delete category (admin only)
- * @access  Private (Admin)
+ * @swagger
+ * /api/categories/{id}:
+ *   delete:
+ *     tags: [Categories]
+ *     summary: Usuń kategorię (admin)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Kategoria usunięta
  */
 router.delete(
   "/:id",

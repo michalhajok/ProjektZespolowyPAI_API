@@ -14,9 +14,34 @@ import {
 const router = Router();
 
 /**
- * @route   GET /api/equipment
- * @desc    Get all equipment with filters
- * @access  Public
+ * @swagger
+ * tags:
+ *   name: Equipment
+ *   description: Zarządzanie sprzętem
+ */
+
+/**
+ * @swagger
+ * /api/equipment:
+ *   get:
+ *     tags: [Equipment]
+ *     summary: Pobierz listę sprzętu
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/PaginatedResponse'
  */
 router.get(
   "/",
@@ -26,16 +51,36 @@ router.get(
 );
 
 /**
- * @route   GET /api/equipment/:id
- * @desc    Get equipment by ID
- * @access  Public
+ * @swagger
+ * /api/equipment/{id}:
+ *   get:
+ *     tags: [Equipment]
+ *     summary: Pobierz sprzęt po ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
 router.get("/:id", validateObjectId(), equipmentController.getEquipmentById);
 
 /**
- * @route   POST /api/equipment
- * @desc    Create equipment (admin only)
- * @access  Private (Admin)
+ * @swagger
+ * /api/equipment:
+ *   post:
+ *     tags: [Equipment]
+ *     summary: Utwórz sprzęt (admin)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       $ref: '#/components/schemas/Equipment'
+ *     responses:
+ *       201:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
 router.post(
   "/",
@@ -46,9 +91,24 @@ router.post(
 );
 
 /**
- * @route   PUT /api/equipment/:id
- * @desc    Update equipment (admin only)
- * @access  Private (Admin)
+ * @swagger
+ * /api/equipment/{id}:
+ *   put:
+ *     tags: [Equipment]
+ *     summary: Edytuj sprzęt (admin)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       $ref: '#/components/schemas/Equipment'
+ *     responses:
+ *       200:
+ *         $ref: '#/components/schemas/ApiResponse'
  */
 router.put(
   "/:id",
@@ -59,9 +119,22 @@ router.put(
 );
 
 /**
- * @route   DELETE /api/equipment/:id
- * @desc    Delete equipment (admin only)
- * @access  Private (Admin)
+ * @swagger
+ * /api/equipment/{id}:
+ *   delete:
+ *     tags: [Equipment]
+ *     summary: Usuń sprzęt (admin)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Sprzęt usunięty
  */
 router.delete(
   "/:id",

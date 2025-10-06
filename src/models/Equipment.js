@@ -79,7 +79,6 @@ const EquipmentSchema = new mongoose.Schema(
 
 EquipmentSchema.index({ category: 1, "availability.status": 1 });
 EquipmentSchema.index({ name: "text", description: "text" });
-EquipmentSchema.index({ "pricing.dailyRate": 1 });
 EquipmentSchema.index({ "metadata.averageRating": -1 });
 EquipmentSchema.index(
   { "specifications.serialNumber": 1 },

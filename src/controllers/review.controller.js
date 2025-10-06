@@ -28,7 +28,6 @@ export const createReview = asyncHandler(async (req, res) => {
     rating,
     title,
     comment,
-    aspects,
   });
   return created(res, review, "Review created");
 });
@@ -45,6 +44,8 @@ export const getReviews = asyncHandler(async (req, res) => {
   if (equipment) filter.equipment = equipment;
   if (user) filter.user = user;
 
+  console.log(filter);
+
   const [items, total] = await Promise.all([
     Review.find(filter)
       .populate("user", "firstName lastName _id")
@@ -55,6 +56,8 @@ export const getReviews = asyncHandler(async (req, res) => {
       .lean(),
     Review.countDocuments(filter),
   ]);
+
+  console.log(items);
 
   return ok(
     res,
