@@ -18,6 +18,7 @@ export const getEquipments = asyncHandler(async (req, res) => {
     limit = 20,
     offset = 0,
   } = req.query;
+  console.log(category);
 
   const filter = {};
   if (category) filter.category = category;
