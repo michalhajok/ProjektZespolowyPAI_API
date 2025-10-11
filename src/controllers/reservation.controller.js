@@ -21,6 +21,7 @@ const hasOverlap = async (equipmentId, startDate, endDate) => {
 
 export const createReservation = asyncHandler(async (req, res) => {
   const { user, equipment, dates, pricing, notes } = req.body;
+
   if (!dates?.startDate || !dates?.endDate)
     return fail(res, 400, "startDate and endDate required");
 
