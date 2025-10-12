@@ -1,11 +1,8 @@
 import { Router } from "express";
 import * as reviewController from "../controllers/review.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
-import {
-  validateReview,
-  validateObjectId,
-  validatePagination,
-} from "../middlewares/validation.middleware.js";
+import { validateReviewCreate, validateReviewUpdate, validateObjectId, validatePagination } from "../middlewares/validation.middleware.js";
+
 
 const router = Router();
 
@@ -24,17 +21,30 @@ const router = Router();
  *     summary: Pobierz recenzje
  *     parameters:
  *       - in: query
+ *         name: reservation
+ *         schema:
+ *           type: string
+ *       - in: query
  *         name: equipment
  *         schema:
  *           type: string
  *       - in: query
- *         name: reservation
+ *         name: user
  *         schema:
  *           type: string
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           example: -createdAt
  *     responses:
  *       200:
  *         $ref: '#/components/schemas/PaginatedResponse'
@@ -64,23 +74,38 @@ router.get("/:id", validateObjectId(), reviewController.getReviewById);
  * /api/reviews:
  *   post:
  *     tags: [Reviews]
- *     summary: Dodaj recenzję
+ *     summary: Dodaj recenzję (tylko właściciel zakończonej rezerwacji)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       $ref: '#/components/schemas/Review'
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reservation, rating]
+ *             properties:
+ *               reservation:
+ *                 type: string
+ *               rating:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 5
+ *               title:
+ *                 type: string
+ *               comment:
+ *                 type: string
  *     responses:
  *       201:
  *         $ref: '#/components/schemas/ApiResponse'
  */
-router.post("/", authenticate, validateReview, reviewController.createReview);
-
+router.post("/", authenticate, validateReviewCreate, reviewController.createReview);
 /**
  * @swagger
  * /api/reviews/{id}:
  *   put:
  *     tags: [Reviews]
- *     summary: Edytuj recenzję (autor)
+ *     summary: Edytuj recenzję (autor lub admin)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -90,17 +115,24 @@ router.post("/", authenticate, validateReview, reviewController.createReview);
  *         schema:
  *           type: string
  *     requestBody:
- *       $ref: '#/components/schemas/Review'
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rating: { type: number, minimum: 1, maximum: 5 }
+ *               title: { type: string }
+ *               comment: { type: string }
  *     responses:
  *       200:
  *         $ref: '#/components/schemas/ApiResponse'
  */
 router.put(
-  "/:id",
-  authenticate,
-  validateObjectId(),
-  validateReview,
-  reviewController.updateReview
+    "/:id",
+    authenticate,
+    validateObjectId(),
+    validateReviewUpdate, reviewController.updateReview
 );
 
 /**
@@ -108,7 +140,7 @@ router.put(
  * /api/reviews/{id}:
  *   delete:
  *     tags: [Reviews]
- *     summary: Usuń recenzję (autor/admin)
+ *     summary: Usuń recenzję (autor lub admin)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -122,10 +154,10 @@ router.put(
  *         description: Recenzja usunięta
  */
 router.delete(
-  "/:id",
-  authenticate,
-  validateObjectId(),
-  reviewController.deleteReview
+    "/:id",
+    authenticate,
+    validateObjectId(),
+    reviewController.deleteReview
 );
 
 export default router;
